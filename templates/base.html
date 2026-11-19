@@ -1,0 +1,272 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Student Academic{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+<div class="app-shell">
+    <!-- Left Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-logo">SA</div>
+            <span class="brand-title">Student Academic</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <!-- Analytics -->
+            <div class="nav-group">
+                <div class="nav-group-label">ANALYTICS</div>
+
+                <!-- Dashboard: use the same namespaced URL used in Global Search -->
+                <a href="{% url 'reports:dashboard' %}"
+                   class="nav-item {% if request.resolver_match and request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1" />
+                        <rect x="14" y="3" width="7" height="7" rx="1" />
+                        <rect x="14" y="14" width="7" height="7" rx="1" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" />
+                    </svg>
+                    <span>Overview</span>
+                </a>
+
+                <a href="{% url 'reports:performance_reports' %}"
+                   class="nav-item {% if request.resolver_match and request.resolver_match.url_name == 'performance_reports' %}active{% endif %}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                    </svg>
+                    <span>Performance Reports</span>
+                </a>
+            </div>
+
+            <!-- Academics -->
+            <div class="nav-group">
+                <div class="nav-group-label">ACADEMICS {% if request.user.role != 'ADMIN' and not request.user.is_superuser %}<span class="nav-access-note">READ ONLY</span>{% endif %}</div>
+
+                <a href="{% url 'academics:programme_list' %}"
+                   class="nav-item {% if 'programme' in request.path %}active{% endif %}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                    <span>Programmes</span>
+                </a>
+
+                <a href="{% url 'academics:course_list' %}"
+                   class="nav-item {% if 'course' in request.path %}active{% endif %}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                        <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                    </svg>
+                    <span>Courses</span>
+                </a>
+
+                <a href="{% url 'academics:subject_list' %}"
+                   class="nav-item {% if 'subject' in request.path %}active{% endif %}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <span>Subjects</span>
+                </a>
+            </div>
+
+            <!-- People -->
+            <div class="nav-group">
+                <div class="nav-group-label">PEOPLE {% if request.user.role != 'ADMIN' and not request.user.is_superuser %}<span class="nav-access-note">READ ONLY</span>{% endif %}</div>
+
+                <a href="{% url 'academics:student_list' %}"
+                   class="nav-item {% if 'student' in request.path %}active{% endif %}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <span>Students</span>
+                </a>
+
+                <a href="{% url 'academics:faculty_list' %}"
+                   class="nav-item {% if 'faculty' in request.path %}active{% endif %}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <span>Faculty</span>
+                </a>
+
+                {% if request.user.role == 'ADMIN' or request.user.is_superuser %}
+                <a href="{% url 'create_user' %}"
+                   class="nav-item {% if 'accounts' in request.path %}active{% endif %}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="8.5" cy="7" r="4" />
+                        <line x1="20" y1="8" x2="20" y2="14" />
+                        <line x1="23" y1="11" x2="17" y2="11" />
+                    </svg>
+                    <span>Create User</span>
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Operations -->
+            <div class="nav-group">
+                <div class="nav-group-label">OPERATIONS</div>
+
+                <a href="{% url 'attendance_history' %}"
+                   class="nav-item {% if 'attendance' in request.path %}active{% endif %}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    <span>Attendance</span>
+                </a>
+
+                <a href="{% url 'marks_list' %}"
+                   class="nav-item {% if 'marks' in request.path %}active{% endif %}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                    <span>Marks</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-signout">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    <span>Sign out</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div class="breadcrumbs">
+                {% block breadcrumbs %}
+                    <span class="crumb-muted">Portal</span>
+                    <span class="crumb-sep">›</span>
+                    <span class="crumb-active">Dashboard</span>
+                {% endblock %}
+            </div>
+
+            <div class="topbar-actions">
+                <button type="button" class="global-search-trigger" id="openGlobalSearch">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <span>Global Search</span>
+                    <kbd>Ctrl + K</kbd>
+                </button>
+
+                <div class="user-pill">
+                    <div class="avatar">{{ request.user.username|slice:":1"|upper|default:"A" }}</div>
+                    <span>{{ request.user.username|default:"Admin" }}</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="content-area">
+            {% if messages %}
+                <div class="toast-stack">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+
+<!-- Global Search Modal (Ctrl + K) -->
+<div class="modal-backdrop" id="globalSearchModal" hidden>
+    <div class="search-modal">
+        <input
+            type="text"
+            id="globalSearchInput"
+            placeholder="Jump to page, student roll number, or subject..."
+            autocomplete="off"
+        >
+
+        <div class="search-results" id="globalSearchResults">
+            <a href="{% url 'reports:dashboard' %}" class="search-item">Analytics › Academic Overview</a>
+            <a href="{% url 'reports:performance_reports' %}" class="search-item">Analytics › Performance Reports</a>
+            <a href="{% url 'academics:student_list' %}" class="search-item">People › Students Directory</a>
+            <a href="{% url 'academics:subject_list' %}" class="search-item">Academics › Subjects Catalogue</a>
+            <a href="{% url 'marks_list' %}" class="search-item">Operations › Student Marks Records</a>
+            <a href="{% url 'attendance_history' %}" class="search-item">Operations › Attendance History</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Open the global search modal with the button or Ctrl + K.
+    const searchModal = document.getElementById('globalSearchModal');
+    const searchInput = document.getElementById('globalSearchInput');
+    const openSearchButton = document.getElementById('openGlobalSearch');
+
+    openSearchButton?.addEventListener('click', () => {
+        searchModal.hidden = false;
+        searchInput.focus();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+            event.preventDefault();
+            searchModal.hidden = !searchModal.hidden;
+
+            if (!searchModal.hidden) {
+                searchInput.focus();
+            }
+        }
+
+        if (event.key === 'Escape' && searchModal) {
+            searchModal.hidden = true;
+        }
+    });
+
+    // Close the modal when the user clicks its backdrop.
+    searchModal?.addEventListener('click', (event) => {
+        if (event.target === searchModal) {
+            searchModal.hidden = true;
+        }
+    });
+
+    // Filter the navigation links as the user types.
+    searchInput?.addEventListener('input', (event) => {
+        const query = event.target.value.toLowerCase().trim();
+
+        document.querySelectorAll('#globalSearchResults .search-item').forEach((item) => {
+            const matches = item.textContent.toLowerCase().includes(query);
+            item.style.display = matches ? 'block' : 'none';
+        });
+    });
+</script>
+
+{% block extra_scripts %}{% endblock %}
+{% block extra_js %}{% endblock %}
+</body>
+</html>

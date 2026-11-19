@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ role_title }} | Student Academic{% endblock %}
+
+{% block breadcrumbs %}
+<span class="crumb-muted">Portal</span><span class="crumb-sep">›</span>
+<span class="crumb-active">Dashboard</span>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <header class="dashboard-header">
+        <div>
+            <div class="dashboard-date">{{ today|date:"l, d F Y" }}</div>
+            <h1>{{ role_title }}</h1>
+            <p>
+                {% if role == "STUDENT" %}
+                    Your academic results, subjects and attendance at a glance.
+                {% elif role == "FACULTY" %}
+                    An overview of your assigned subjects and enrolled students.
+                {% else %}
+                    A summary of academic activity across the institution.
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'reports:performance_reports' %}" class="btn btn-primary">View reports</a>
+    </header>
+
+    {% if role == "STUDENT" %}
+    <section class="dashboard-kpi-grid dashboard-kpi-grid-four">
+        <article class="dashboard-kpi"><div class="dashboard-kpi-label">My average marks</div><div class="dashboard-kpi-value">{{ student_average|floatformat:1 }}<span>%</span></div><div class="dashboard-kpi-note">Across recorded assessments</div></article>
+        <article class="dashboard-kpi"><div class="dashboard-kpi-label">My attendance</div><div class="dashboard-kpi-value">{{ attendance_percentage|floatformat:1 }}<span>%</span></div><div class="dashboard-kpi-note">{{ present_count }} of {{ attendance_total }} sessions present</div></article>
+        <article class="dashboard-kpi"><div class="dashboard-kpi-label">My subjects</div><div class="dashboard-kpi-value">{{ total_subjects }}</div><div class="dashboard-kpi-note">Current course and semester</div></article>
+        <article class="dashboard-kpi"><div class="dashboard-kpi-label">Marks records</div><div class="dashboard-kpi-value">{{ marks_count }}</div><div class="dashboard-kpi-note">Recorded subject results</div></article>
+    </section>
+    {% elif role == "FACULTY" %}
+    <section class="dashboard-kpi-grid dashboard-kpi-grid-four">
+        <article class="dashboard-kpi"><div class="dashboard-kpi-label">Students in my classes</div><div class="dashboard-kpi-value">{{ total_students }}</div><div class="dashboard-kpi-note">Across assigned subjects</div></article>
+        <article class="dashboard-kpi"><div class="dashboard-kpi-label">Assigned subjects</div><div class="dashboard-kpi-value">{{ total_subjects }}</div><div class="dashboard-kpi-note">Subjects assigned to you</div></article>
+        <article class="dashboard-kpi"><div class="dashboard-kpi-label">Average marks</div><div class="dashboard-kpi-value">{{ average_percentage|floatformat:1 }}<span>%</span></div><div class="dashboard-kpi-note">Across available marks records</div></article>
+        <article class="dashboard-kpi"><div class="dashboard-kpi-label">Attendance</div><div class="dashboard-kpi-value">{{ attendance_percentage|floatformat:1 }}<span>%</span></div><div class="dashboard-kpi-note">Present sessions</div></article>
+    </section>
+    {% else %}
+    <section class="dashboard-kpi-grid dashboard-kpi-grid-four">
+        <article class="dashboard-kpi"><div class="dashboard-kpi-label">Total students</div><div class="dashboard-kpi-value">{{ total_students }}</div><div class="dashboard-kpi-note">Registered student profiles</div></article>
+        <article class="dashboard-kpi"><div class="dashboard-kpi-label">Programmes</div><div class="dashboard-kpi-value">{{ total_programmes }}</div><div class="dashboard-kpi-note">Academic programmes</div></article>
+        <article class="dashboard-kpi"><div class="dashboard-kpi-label">Courses</div><div class="dashboard-kpi-value">{{ total_courses }}</div><div class="dashboard-kpi-note">Registered courses</div></article>
+        <article class="dashboard-kpi"><div class="dashboard-kpi-label">Subjects</div><div class="dashboard-kpi-value">{{ total_subjects }}</div><div class="dashboard-kpi-note">Subjects in the catalogue</div></article>
+    </section>
+    <section class="dashboard-kpi-grid dashboard-kpi-grid-two">
+        <article class="dashboard-kpi dashboard-kpi-wide"><div class="dashboard-kpi-label">Average academic percentage</div><div class="dashboard-kpi-value">{{ average_percentage|floatformat:1 }}<span>%</span></div><div class="dashboard-kpi-note">Based on recorded marks</div></article>
+        <article class="dashboard-kpi dashboard-kpi-wide"><div class="dashboard-kpi-label">Overall attendance</div><div class="dashboard-kpi-value">{{ attendance_percentage|floatformat:1 }}<span>%</span></div><div class="dashboard-kpi-note">{{ present_count }} of {{ attendance_total }} sessions present</div></article>
+    </section>
+    {% endif %}
+
+    <section class="dashboard-chart-grid">
+        <article class="dashboard-panel">
+            <div class="dashboard-panel-header"><div><h2>Grade distribution</h2><p>Distribution of recorded grades</p></div></div>
+            <div class="dashboard-chart-wrap"><canvas id="gradeChart" aria-label="Grade distribution chart"></canvas></div>
+            {% if marks_count == 0 %}<p class="chart-empty-note">Grade data will appear when marks are recorded.</p>{% endif %}
+        </article>
+        <article class="dashboard-panel">
+            <div class="dashboard-panel-header"><div><h2>Subject-wise average marks</h2><p>Average percentage by subject</p></div></div>
+            <div class="dashboard-chart-wrap"><canvas id="subjectChart" aria-label="Subject average marks chart"></canvas></div>
+            {% if not subject_averages %}<p class="chart-empty-note">Subject results will appear when marks are recorded.</p>{% endif %}
+        </article>
+    </section>
+
+    <section class="dashboard-panel dashboard-attendance-panel">
+        <div class="dashboard-panel-header dashboard-attendance-heading">
+            <div><h2>{% if role == "STUDENT" %}My attendance{% else %}Attendance overview{% endif %}</h2><p>Attendance summary by subject</p></div>
+            <a href="{% url 'attendance_history' %}" class="btn btn-outline btn-small">Full attendance history</a>
+        </div>
+        <div class="table-responsive">
+            <table class="dashboard-table">
+                <thead><tr>
+                    {% if role != "STUDENT" %}<th>Roll number</th><th>Student</th>{% endif %}
+                    <th>Subject</th><th>Present</th><th>Absent</th><th>Attendance</th><th>Status</th>
+                </tr></thead>
+                <tbody>
+                {% for item in attendance_summary %}
+                    <tr>
+                        {% if role != "STUDENT" %}<td>{{ item.roll_number }}</td><td>{{ item.student_name }}</td>{% endif %}
+                        <td>{{ item.subject_name }}</td><td>{{ item.present }}</td><td>{{ item.absent }}</td><td>{{ item.percentage|floatformat:1 }}%</td>
+                        <td>{% if item.low_attendance %}<span class="status-pill status-warning">Below 75%</span>{% else %}<span class="status-pill status-good">On track</span>{% endif %}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="empty-state">No attendance records are available yet.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ grade_counts|json_script:"grade-data" }}
+{{ subject_averages|json_script:"subject-data" }}
+<script>
+(() => {
+    const gradeElement = document.getElementById("grade-data");
+    const subjectElement = document.getElementById("subject-data");
+    const gradeCanvas = document.getElementById("gradeChart");
+    const subjectCanvas = document.getElementById("subjectChart");
+    if (!gradeElement || !subjectElement || typeof Chart === "undefined") return;
+
+    const gradeData = JSON.parse(gradeElement.textContent || "{}");
+    const subjectData = JSON.parse(subjectElement.textContent || "[]");
+
+    if (gradeCanvas) {
+        new Chart(gradeCanvas, {
+            type: "doughnut",
+            data: {
+                labels: Object.keys(gradeData),
+                datasets: [{ data: Object.values(gradeData), borderWidth: 2 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: "bottom" } }
+            }
+        });
+    }
+
+    if (subjectCanvas) {
+        new Chart(subjectCanvas, {
+            type: "bar",
+            data: {
+                labels: subjectData.map(item => item.name),
+                datasets: [{ label: "Average marks (%)", data: subjectData.map(item => item.average), borderRadius: 7 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, max: 100 } },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

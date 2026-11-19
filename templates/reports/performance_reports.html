@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Performance Reports | Student Academic{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+    <div>
+        <p class="small text-muted mb-1">Academic analytics</p>
+        <h1 class="h3 fw-bold mb-1">Performance reports</h1>
+        <p class="text-muted mb-0">
+            {% if user.role == "STUDENT" %}
+                Your academic results and attendance summary.
+            {% elif user.role == "FACULTY" %}
+                Results and attendance for your assigned classes.
+            {% else %}
+                Student performance across the institution.
+            {% endif %}
+        </p>
+    </div>
+    <a class="btn btn-success" href="{% url 'reports:export_performance_csv' %}">Download CSV</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="card h-100"><div class="card-body">
+            <div class="small text-muted">Students shown</div>
+            <div class="display-6 fw-semibold">{{ rows|length }}</div>
+        </div></div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card h-100"><div class="card-body">
+            <div class="small text-muted">Below {{ low_marks_threshold }}% marks</div>
+            <div class="display-6 fw-semibold">{{ low_marks_count }}</div>
+        </div></div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card h-100"><div class="card-body">
+            <div class="small text-muted">Below {{ low_attendance_threshold }}% attendance</div>
+            <div class="display-6 fw-semibold">{{ low_attendance_count }}</div>
+        </div></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header py-3">Student performance detail</div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    {% if user.role != "STUDENT" %}<th>Roll number</th><th>Student</th>{% endif %}
+                    <th>Average marks</th>
+                    <th>Attendance</th>
+                    <th>Marks records</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+                <tr>
+                    {% if user.role != "STUDENT" %}
+                        <td class="fw-semibold">{{ row.student.roll_number }}</td>
+                        <td>{{ row.student.full_name }}</td>
+                    {% endif %}
+                    <td>{{ row.average_marks|floatformat:2 }}%</td>
+                    <td>{{ row.attendance_percentage|floatformat:2 }}%</td>
+                    <td>{{ row.marks_records }}</td>
+                    <td>
+                        {% if row.marks_records and row.average_marks < low_marks_threshold %}
+                            <span class="badge text-bg-danger">Needs review</span>
+                        {% elif row.attendance_percentage and row.attendance_percentage < low_attendance_threshold %}
+                            <span class="badge text-bg-warning">Low attendance</span>
+                        {% elif not row.marks_records %}
+                            <span class="badge text-bg-secondary">Marks pending</span>
+                        {% else %}
+                            <span class="badge text-bg-success">On track</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-5">
+                    No performance records are available for this account yet.
+                </td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

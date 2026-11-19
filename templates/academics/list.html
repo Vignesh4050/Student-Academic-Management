@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} | Student Academic{% endblock %}
+
+{% block breadcrumbs %}
+<span class="crumb-muted">Portal</span><span class="crumb-sep">›</span>
+<span class="crumb-active">{{ page_title }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-eyebrow">ACADEMIC RECORDS</div>
+        <h1 class="page-title">{{ page_title }}</h1>
+        <p class="page-subtitle">
+            {% if can_manage %}
+                View and manage institutional {{ page_title|lower }} records.
+            {% elif page_title == "Students" and role == "STUDENT" %}
+                Your student profile. This page is read-only.
+            {% elif page_title == "Students" and role == "FACULTY" %}
+                Students enrolled in your assigned subjects. This page is read-only.
+            {% elif page_title == "Subjects" and role == "STUDENT" %}
+                Subjects for your course and current semester. This page is read-only.
+            {% elif page_title == "Subjects" and role == "FACULTY" %}
+                Subjects assigned to your faculty account. This page is read-only.
+            {% else %}
+                Records available to your account. This page is read-only.
+            {% endif %}
+        </p>
+    </div>
+    <div class="page-header-actions">
+        {% if can_manage %}
+            {% if page_title == "Faculty" %}
+                <a href="{% url create_url %}" class="btn btn-primary">Add Faculty</a>
+            {% else %}
+                <a href="{% url create_url %}" class="btn btn-primary">Add {{ page_title|slice:":-1" }}</a>
+            {% endif %}
+        {% else %}
+            <span class="readonly-pill">Read only access</span>
+        {% endif %}
+    </div>
+</div>
+
+{% if page_title == "Students" or page_title == "Subjects" %}
+<section class="filter-bar">
+    <form method="get" class="filter-form">
+        <div class="filter-field filter-search">
+            <label for="searchBox">Search</label>
+            <input id="searchBox" type="search" name="q" value="{{ search_query|default:'' }}"
+                   class="form-control" placeholder="Search by name, code or roll number">
+        </div>
+        {% if page_title == "Students" %}
+            {% if can_manage %}
+            <div class="filter-field">
+                <label for="programmeFilter">Programme</label>
+                <select id="programmeFilter" name="programme" class="form-select">
+                    <option value="">All programmes</option>
+                    {% for item in programmes %}
+                    <option value="{{ item.id }}" {% if selected_programme == item.id|stringformat:"s" %}selected{% endif %}>{{ item.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div class="filter-field">
+                <label for="courseFilter">Course</label>
+                <select id="courseFilter" name="course" class="form-select">
+                    <option value="">All courses</option>
+                    {% for item in courses %}
+                    <option value="{{ item.id }}" {% if selected_course == item.id|stringformat:"s" %}selected{% endif %}>{{ item.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-field">
+                <label for="semesterFilter">Semester</label>
+                <select id="semesterFilter" name="semester" class="form-select">
+                    <option value="">All semesters</option>
+                    {% for item in semesters %}
+                    <option value="{{ item.id }}" {% if selected_semester == item.id|stringformat:"s" %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        {% else %}
+            <div class="filter-field">
+                <label for="courseFilter">Course</label>
+                <select id="courseFilter" name="course" class="form-select">
+                    <option value="">All courses</option>
+                    {% for item in courses %}
+                    <option value="{{ item.id }}" {% if selected_course == item.id|stringformat:"s" %}selected{% endif %}>{{ item.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-field">
+                <label for="semesterFilter">Semester</label>
+                <select id="semesterFilter" name="semester" class="form-select">
+                    <option value="">All semesters</option>
+                    {% for item in semesters %}
+                    <option value="{{ item.id }}" {% if selected_semester == item.id|stringformat:"s" %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if can_manage %}
+            <div class="filter-field">
+                <label for="facultyFilter">Faculty</label>
+                <select id="facultyFilter" name="faculty" class="form-select">
+                    <option value="">All faculty</option>
+                    {% for item in faculties %}
+                    <option value="{{ item.id }}" {% if selected_faculty == item.id|stringformat:"s" %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+        {% endif %}
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Apply filters</button>
+            {% if page_title == "Students" %}
+                <a href="{% url 'academics:student_list' %}" class="btn btn-outline">Reset</a>
+            {% else %}
+                <a href="{% url 'academics:subject_list' %}" class="btn btn-outline">Reset</a>
+            {% endif %}
+        </div>
+    </form>
+</section>
+{% endif %}
+
+<section class="table-card">
+    <div class="table-header-bar">
+        <div>
+            <h2 class="section-title">{{ page_title }} directory</h2>
+            <p class="section-caption">{{ objects|length }} record(s) available</p>
+        </div>
+        {% if not can_manage %}<span class="readonly-pill">Read only</span>{% endif %}
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+            {% if page_title == "Students" %}
+                <tr><th>Roll number</th><th>Student</th><th>Programme</th><th>Course</th><th>Semester</th>{% if can_manage %}<th class="text-end">Actions</th>{% endif %}</tr>
+            {% elif page_title == "Subjects" %}
+                <tr><th>Subject code</th><th>Subject</th><th>Course</th><th>Semester</th><th>Faculty</th>{% if can_manage %}<th class="text-end">Actions</th>{% endif %}</tr>
+            {% elif page_title == "Faculty" %}
+                <tr><th>Faculty member</th><th>Department</th>{% if can_manage %}<th class="text-end">Actions</th>{% endif %}</tr>
+            {% elif page_title == "Courses" %}
+                <tr><th>Course code</th><th>Course</th><th>Programme</th>{% if can_manage %}<th class="text-end">Actions</th>{% endif %}</tr>
+            {% elif page_title == "Programmes" %}
+                <tr><th>Programme code</th><th>Programme</th><th>Description</th>{% if can_manage %}<th class="text-end">Actions</th>{% endif %}</tr>
+            {% else %}
+                <tr><th>ID</th><th>Record</th>{% if can_manage %}<th class="text-end">Actions</th>{% endif %}</tr>
+            {% endif %}
+            </thead>
+            <tbody>
+            {% for object in objects %}
+                <tr>
+                    {% if page_title == "Students" %}
+                        <td class="table-primary-text">{{ object.roll_number }}</td>
+                        <td>{{ object.full_name }}{% if object.email %}<span class="table-subtext">{{ object.email }}</span>{% endif %}</td>
+                        <td>{{ object.programme.name }}</td><td>{{ object.course.name }}</td><td>{{ object.semester }}</td>
+                    {% elif page_title == "Subjects" %}
+                        <td class="table-primary-text">{{ object.code }}</td><td>{{ object.name }}</td><td>{{ object.course.name }}</td><td>{{ object.semester }}</td><td>{{ object.faculty|default:"Not assigned" }}</td>
+                    {% elif page_title == "Faculty" %}
+                        <td>{{ object.user.get_full_name|default:object.user.username }}</td><td>{{ object.department }}</td>
+                    {% elif page_title == "Courses" %}
+                        <td class="table-primary-text">{{ object.code }}</td><td>{{ object.name }}</td><td>{{ object.programme.name }}</td>
+                    {% elif page_title == "Programmes" %}
+                        <td class="table-primary-text">{{ object.code }}</td><td>{{ object.name }}</td><td>{{ object.description|default:"—" }}</td>
+                    {% else %}
+                        <td>{{ object.pk }}</td><td>{{ object }}</td>
+                    {% endif %}
+                    {% if can_manage %}
+                    <td class="table-actions">
+                        <a href="{% url update_url object.pk %}" class="btn btn-outline btn-small">Edit</a>
+                        <a href="{% url delete_url object.pk %}" class="btn btn-danger-outline btn-small">Delete</a>
+                    </td>
+                    {% endif %}
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="empty-state">No records are available for your account.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

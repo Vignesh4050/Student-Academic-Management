@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Summary{% endblock %}
+
+{% block content %}
+
+<h2 class="mb-3">Attendance Summary</h2>
+
+<p class="text-muted">
+    Students with attendance below {{ threshold }}%
+    are highlighted for review.
+</p>
+
+<div class="card shadow-sm">
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-hover">
+
+                <thead class="table-primary">
+                    <tr>
+                        <th>Roll Number</th>
+                        <th>Student Name</th>
+                        <th>Classes Recorded</th>
+                        <th>Present</th>
+                        <th>Absent</th>
+                        <th>Attendance Percentage</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for item in summaries %}
+
+                    <tr>
+                        <td>
+                            {{ item.student.roll_number }}
+                        </td>
+
+                        <td>
+                            {{ item.student.full_name }}
+                        </td>
+
+                        <td>
+                            {{ item.total }}
+                        </td>
+
+                        <td>
+                            {{ item.present }}
+                        </td>
+
+                        <td>
+                            {{ item.absent }}
+                        </td>
+
+                        <td>
+                            {{ item.percentage }}%
+                        </td>
+
+                        <td>
+
+                            {% if item.total == 0 %}
+                                <span class="badge bg-secondary">
+                                    No Records
+                                </span>
+
+                            {% elif item.low_attendance %}
+                                <span class="badge bg-danger">
+                                    Low Attendance
+                                </span>
+
+                            {% else %}
+                                <span class="badge bg-success">
+                                    Satisfactory
+                                </span>
+                            {% endif %}
+
+                        </td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            No attendance summary is available.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+</div>
+
+<a href="{% url 'dashboard' %}"
+   class="btn btn-secondary mt-3">
+    Back to Dashboard
+</a>
+
+{% endblock %}

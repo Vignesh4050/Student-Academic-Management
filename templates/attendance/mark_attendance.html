@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}Mark Attendance{% endblock %}
+
+{% block content %}
+
+<h2 class="mb-4">Student Attendance Management</h2>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        Select Subject and Date
+    </div>
+
+    <div class="card-body">
+
+        <form method="get" action="{% url 'mark_attendance' %}">
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">
+                        Subject
+                    </label>
+
+                    {{ session_form.subject }}
+
+                    {% for error in session_form.subject.errors %}
+                        <div class="text-danger small">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">
+                        Attendance Date
+                    </label>
+
+                    {{ session_form.date }}
+
+                    {% for error in session_form.date.errors %}
+                        <div class="text-danger small">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-md-2 mb-3 d-flex align-items-end">
+                    <button
+                        type="submit"
+                        class="btn btn-primary w-100">
+                        Load Students
+                    </button>
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+
+{% if show_attendance_form %}
+
+<div class="card shadow-sm">
+
+    <div class="card-header bg-success text-white">
+        Attendance Entry
+    </div>
+
+    <div class="card-body">
+
+        <p>
+            <strong>Subject:</strong>
+            {{ selected_subject.name }}
+        </p>
+
+        <p>
+            <strong>Date:</strong>
+            {{ selected_date }}
+        </p>
+
+        {% if students %}
+
+        <form method="post"
+              action="{% url 'mark_attendance' %}">
+
+            {% csrf_token %}
+
+            <input
+                type="hidden"
+                name="subject_id"
+                value="{{ selected_subject.pk }}">
+
+            <input
+                type="hidden"
+                name="attendance_date"
+                value="{{ selected_date|date:'Y-m-d' }}">
+
+            {{ formset.management_form }}
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover">
+
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Roll Number</th>
+                            <th>Student Name</th>
+                            <th>Attendance Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        {% for student, form in attendance_rows %}
+
+                        <tr>
+                            <td>
+                                {{ student.roll_number }}
+                                {{ form.student_id }}
+                            </td>
+
+                            <td>{{ student.full_name }}</td>
+
+                            <td>
+                                {{ form.status }}
+
+                                {% for error in form.status.errors %}
+                                    <div class="text-danger small">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <button
+                type="submit"
+                class="btn btn-success">
+                Save Attendance
+            </button>
+
+        </form>
+
+        {% else %}
+
+        <div class="alert alert-warning">
+            No students are registered for this subject and semester.
+        </div>
+
+        {% endif %}
+
+    </div>
+</div>
+
+{% endif %}
+
+<div class="mt-4">
+    <a href="{% url 'attendance_history' %}"
+       class="btn btn-outline-primary">
+        View Attendance History
+    </a>
+
+    <a href="{% url 'attendance_summary' %}"
+       class="btn btn-outline-success">
+        View Attendance Summary
+    </a>
+</div>
+
+{% endblock %}
